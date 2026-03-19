@@ -3,143 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resgate na Ilha - Desafio Lógico</title>
+    <title>Sobrevivência na Ilha - Mapa Real</title>
     <style>
         :root {
-            --mar: #4a90e2; --grama: #2ecc71; --areia: #f1c40f;
-            --texto: #2c3e50; --borda: #34495e;
+            --mar: #3498db; --grama: #2ecc71; --areia: #f1c40f;
+            --grama-escura: #27ae60; --borda: #2c3e50;
         }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #ecf0f1; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #dfe6e9; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         
-        .container { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; }
-        
+        .game-layout { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+
+        /* Estilo do Grid */
         #grid { 
-            display: grid; grid-template-columns: repeat(9, 45px); grid-template-rows: repeat(9, 45px);
-            gap: 2px; background: var(--borda); border: 4px solid var(--borda); box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            display: grid; 
+            grid-template-columns: repeat(9, 50px); 
+            grid-template-rows: repeat(9, 50px);
+            gap: 1px; background: #95a5a6; border: 5px solid var(--borda);
         }
         
         .cell { 
-            width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; 
-            font-weight: bold; font-size: 1.2rem; cursor: pointer; transition: 0.2s; position: relative;
+            width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; 
+            font-size: 1.5rem; cursor: pointer; position: relative; transition: 0.2s;
         }
-        
-        .cell:hover { opacity: 0.8; transform: scale(1.05); z-index: 10; }
-        
-        /* Cores do Terreno */
-        .mar { background-color: var(--mar); }
-        .grama { background-color: var(--grama); }
-        .areia { background-color: var(--areia); }
-        .bloqueado { filter: brightness(0.7); cursor: not-allowed; }
-        
-        .sidebar { max-width: 350px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        
-        .controls { margin-top: 20px; display: flex; gap: 8px; flex-wrap: wrap; }
-        .btn-item { 
-            padding: 10px 15px; border: 2px solid var(--borda); background: white; 
-            cursor: pointer; font-weight: bold; border-radius: 5px;
+
+        /* Cores do Terreno baseado na Imagem 3 */
+        .M { background-color: var(--mar); }        /* Mar */
+        .A { background-color: var(--areia); }      /* Areia */
+        .G { background-color: var(--grama); }      /* Grama Clara */
+        .GE { background-color: var(--grama-escura); } /* Grama Escura/Ilha */
+
+        /* Marcador de Item do Jogador */
+        .item-player { 
+            color: white; font-weight: bold; text-shadow: 1px 1px 2px black;
+            background: rgba(0,0,0,0.3); border-radius: 50%; width: 30px; height: 30px;
+            display: flex; align-items: center; justify-content: center; z-index: 5;
         }
-        .btn-item.selected { background: var(--borda); color: white; }
-        
-        .msg { margin-top: 15px; padding: 10px; border-radius: 5px; font-weight: bold; display: none; }
+
+        .sidebar { width: 300px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 15px; }
+        .btn-item { padding: 10px; border: 2px solid var(--borda); cursor: pointer; font-weight: bold; }
+        .btn-item.active { background: var(--borda); color: white; }
     </style>
 </head>
 <body>
 
-    <h1>🏝️ Sobrevivência na Ilha</h1>
-    <p>Posicione os recursos respeitando as dicas e o terreno!</p>
+    <h1>🏝️ Mapa de Sobrevivência</h1>
 
-    <div class="container">
+    <div class="game-layout">
         <div id="grid"></div>
 
         <div class="sidebar">
-            <h3>Dicas de Resgate:</h3>
-            <ul id="dicas-lista" style="font-size: 0.9rem; line-height: 1.6;">
-                <li>📍 <b>A (Rede):</b> Deve ficar em uma CASA.</li>
-                <li>📍 <b>B (Medicamento):</b> Deve ficar em um TRONCO.</li>
-                <li>📍 <b>G (Protetor):</b> Deve ficar na COLUNA 5.</li>
-                <li>📍 <b>F (Isqueiro):</b> Ao lado de um ARBUSTO.</li>
-                <li>⚠️ <b>Regra:</b> Apenas 1 item por linha e coluna!</li>
-            </ul>
-            <div id="status-msg" class="msg"></div>
-            
+            <h3>Recursos para Alocar:</h3>
             <div class="controls" id="item-selector"></div>
-            <br>
-            <button onclick="window.location.reload()" style="width: 100%; padding: 10px; cursor: pointer;">Reiniciar Jogo</button>
+            <hr>
+            <p id="info-item" style="font-size: 0.85rem; color: #666; height: 40px;"></p>
+            <button onclick="window.location.reload()" style="width:100%">Resetar Mapa</button>
         </div>
     </div>
 
     <script>
-        // Mapeamento simplificado (M = Mar, G = Grama, A = Areia)
-        // Você pode ajustar isso para bater 100% com a imagem 3
-        const mapaBase = [
-            ['M','M','A','A','A','M','M','M','M'],
-            ['M','M','A','A','A','M','M','M','M'],
-            ['M','M','A','A','A','M','M','M','M'],
-            ['M','M','M','M','G','G','G','M','M'],
-            ['G','G','G','G','G','G','G','M','M'],
-            ['G','G','G','G','G','G','G','G','G'],
-            ['G','G','G','G','G','G','G','G','G'],
-            ['G','G','G','G','G','G','G','G','G'],
-            ['G','G','G','G','G','G','G','G','G']
+        // LEGENDA DO MAPA:
+        // M: Mar, A: Areia, G: Grama, GE: Grama Escura
+        // Objetos: 🌵: Cacto, 🏠: Casa, 🪵: Tronco, 🐗: Javali, 🦈: Tubarão, 🌳: Árvore, 🌿: Arbusto, 🪨: Rocha
+        
+        const mapaDesign = [
+            ['M','M','M','M','🪨','M','M','M','M'],
+            ['M','M','M','M','M','M','A','🌵','A'],
+            ['M','M','🏠','M','M','🌵','A','A','A'],
+            ['M','M','M','M','🪵','M','A','🌵','A'],
+            ['🪵','🪨','M','M','🐗','M','M','M','M'],
+            ['M','M','M','M','M','M','🪵','M','M'],
+            ['🏠','M','M','🌿','🦈','M','🪨','M','🌳'],
+            ['🪨','M','M','M','M','M','🌳','M','M'],
+            ['M','🏠','M','M','M','M','M','🌳','M']
         ];
 
-        let itemSelecionado = 'A';
-        let jogadas = {}; // Guarda posição de cada letra
+        // Definindo as cores de fundo para cada célula (ajustado para o desenho da imagem)
+        const mapaCores = [
+            ['M','M','M','M','M','M','A','A','A'],
+            ['M','M','M','M','M','M','A','A','A'],
+            ['M','M','G','M','M','M','A','A','A'],
+            ['M','M','G','M','M','M','M','M','M'],
+            ['G','G','G','G','G','M','M','M','M'],
+            ['G','G','G','G','G','M','M','M','M'],
+            ['G','G','G','G','M','G','G','G','G'],
+            ['G','G','G','G','M','G','G','G','G'],
+            ['G','G','G','G','M','G','G','G','G']
+        ];
+
+        let itemAtual = 'A';
+        const infoItens = {
+            'A': 'Rede de Pesca (Deve estar na CASA)',
+            'B': 'Medicamento (Deve estar no TRONCO)',
+            'C': 'Sinalizador (Deve estar na ÁRVORE)',
+            'D': 'Repelente (Ao lado do mesmo tipo de objeto do alimento)',
+            'E': 'Água Potável (Ao lado de um JAVALI)',
+            'F': 'Isqueiro (Ao lado de um ARBUSTO)',
+            'G': 'Protetor (Coluna 5)',
+            'H': 'Alimentação (Ilha com 3 recursos)',
+            'I': 'Ponto de Resgate (Último espaço)'
+        };
 
         const grid = document.getElementById('grid');
         const selector = document.getElementById('item-selector');
+        const infoBox = document.getElementById('info-item');
 
-        // Criar botões de itens
-        "ABCDEFGHI".split('').forEach(letra => {
+        // Criar botões
+        Object.keys(infoItens).forEach(letra => {
             const btn = document.createElement('button');
+            btn.className = 'btn-item' + (letra === 'A' ? ' active' : '');
             btn.innerText = letra;
-            btn.className = 'btn-item' + (letra === 'A' ? ' selected' : '');
             btn.onclick = () => {
-                document.querySelectorAll('.btn-item').forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
-                itemSelecionado = letra;
+                document.querySelectorAll('.btn-item').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                itemAtual = letra;
+                infoBox.innerText = infoItens[letra];
             };
             selector.appendChild(btn);
         });
 
-        // Criar o tabuleiro
+        // Construir o Grid
         for (let r = 0; r < 9; r++) {
             for (let c = 0; c < 9; c++) {
                 const cell = document.createElement('div');
-                const tipo = mapaBase[r][c];
-                cell.className = `cell ${tipo === 'M' ? 'mar' : tipo === 'G' ? 'grama' : 'areia'}`;
-                cell.dataset.row = r;
-                cell.dataset.col = c;
+                const conteudo = mapaDesign[r][c];
+                const cor = mapaCores[r][c];
+                
+                cell.className = `cell ${cor}`;
+                cell.innerHTML = (conteudo !== cor) ? conteudo : ''; // Coloca o emoji se não for apenas cor
+                
+                cell.onclick = () => {
+                    // Remover item se já estiver no mapa
+                    document.querySelectorAll('.item-player').forEach(p => {
+                        if(p.innerText === itemAtual) p.remove();
+                    });
 
-                cell.onclick = () => realizarJogada(r, c, cell);
+                    // Adicionar novo
+                    const marker = document.createElement('div');
+                    marker.className = 'item-player';
+                    marker.innerText = itemAtual;
+                    cell.appendChild(marker);
+                };
+                
                 grid.appendChild(cell);
             }
         }
-
-        function realizarJogada(r, c, el) {
-            const status = document.getElementById('status-msg');
-            
-            // Limpa letra anterior desse item se existir
-            document.querySelectorAll('.cell').forEach(cell => {
-                if(cell.innerText === itemSelecionado) cell.innerText = '';
-            });
-
-            // Validação simples de Coluna (Dica do item G)
-            if (itemSelecionado === 'G' && (c + 1) !== 5) {
-                mostrarErro("O Protetor (G) deve estar na Coluna 5!");
-                return;
-            }
-
-            el.innerText = itemSelecionado;
-            status.style.display = 'none';
-        }
-
-        function mostrarErro(m) {
-            const status = document.getElementById('status-msg');
-            status.innerText = m;
-            status.style.display = 'block';
-            status.style.backgroundColor = '#ff7675';
-        }
+        infoBox.innerText = infoItens['A'];
     </script>
 </body>
 </html>
