@@ -4,101 +4,122 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sobrevivência — Jogo de Lógica</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Crimson+Pro:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --sand: #e8c97a;
-    --grass: #4a7c3f;
-    --sea: #1a6b9e;
+    --sand: #eed7a1;
+    --grass: #568c4a;
+    --sea: #2a8cc2;
     --gold: #f0c040;
     --correct: #5dbb6a;
     --wrong: #e05252;
     --text: #f0e8d0;
-    --bg: #0d3550;
+    --bg: #0a263a;
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: 'Crimson Pro', serif;
     background: var(--bg);
     color: var(--text);
-    min-height: 100vh;
+    margin: 0;
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
-  header { text-align: center; margin-bottom: 30px; }
-  h1 { font-family: 'Cinzel Decorative', cursive; color: var(--gold); }
+  header { text-align: center; margin-bottom: 20px; }
+  h1 { font-family: 'Cinzel Decorative', cursive; color: var(--gold); margin: 0; }
 
-  .container { max-width: 1000px; margin: 0 auto; }
+  .game-container {
+    display: flex;
+    gap: 30px;
+    max-width: 1100px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 
-  /* Grid Layout */
-  .game-layout { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
-  
-  .clues-panel { flex: 1; min-width: 300px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .clue-card {
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.1);
-    padding: 10px;
+  /* Painel de Itens */
+  .items-panel {
+    width: 320px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .item-card {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 12px;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 0.85rem;
+    transition: 0.2s;
   }
-  .clue-card.selected { border-color: var(--gold); background: rgba(240,192,64,0.15); }
-  .clue-card.placed { opacity: 0.5; border-color: var(--correct); }
+  .item-card:hover { background: rgba(255,255,255,0.15); }
+  .item-card.selected { border-color: var(--gold); box-shadow: 0 0 10px var(--gold); }
+  .item-card.placed { opacity: 0.4; pointer-events: none; border-color: var(--correct); }
 
-  .grid-table { border-collapse: collapse; background: rgba(0,0,0,0.2); }
-  .grid-cell {
-    width: 45px; height: 45px;
+  /* Grid do Mapa */
+  .map-wrapper { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 4px; }
+  .grid { border-collapse: collapse; }
+  .cell {
+    width: 45px;
+    height: 45px;
     border: 1px solid rgba(255,255,255,0.1);
     text-align: center;
-    cursor: pointer;
     font-size: 1.2rem;
+    cursor: pointer;
     position: relative;
   }
-  
-  /* Cores baseadas no terreno */
-  .sand { background-color: rgba(232, 201, 122, 0.4); }
-  .grass { background-color: rgba(74, 124, 63, 0.5); }
-  .sea { background-color: rgba(26, 107, 158, 0.6); }
 
-  .blocked::after { content: '×'; color: rgba(255,255,255,0.2); position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-  
-  .player { background: rgba(240,192,64,0.4) !important; font-weight: bold; color: white; }
-  .correct-placement { background: rgba(93,187,106,0.5) !important; }
-  .wrong-placement { background: rgba(224,82,82,0.5) !important; }
+  .sand { background-color: var(--sand); color: #5d4a1e; }
+  .grass { background-color: var(--grass); }
+  .sea { background-color: var(--sea); }
 
-  .controls { margin-top: 20px; text-align: center; display: flex; gap: 10px; justify-content: center; }
-  .btn { padding: 10px 20px; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; }
-  .btn-check { background: var(--correct); color: white; }
-  .btn-reset { background: #666; color: white; }
+  /* Elementos Visuais */
+  .cell.blocked::after { content: "×"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: rgba(0,0,0,0.2); font-size: 2rem; }
+  .cell.user-choice { background: rgba(240,192,64,0.6) !important; font-weight: bold; color: white; border: 2px solid var(--gold); }
+  .cell.correct { background: var(--correct) !important; }
+  .cell.wrong { background: var(--wrong) !important; }
+
+  .controls { margin-top: 20px; display: flex; gap: 15px; }
+  button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-check { background: var(--gold); color: #000; }
+  .btn-reset { background: #555; color: #fff; }
   
-  .message { margin-top: 15px; text-align: center; min-height: 24px; font-weight: bold; }
+  #msg { margin-top: 15px; font-weight: bold; font-size: 1.1rem; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>🏝️ SOBREVIVÊNCIA</h1>
-  <p>Use a lógica para posicionar os suprimentos conforme as dicas.</p>
+  <h1>🏝️ DESAFIO DE SOBREVIVÊNCIA</h1>
+  <p>Localize os suprimentos. Regra: Um por linha e um por coluna.</p>
 </header>
 
-<div class="container">
-  <div class="game-layout">
-    <div class="clues-panel" id="cluesPanel"></div>
+<div class="game-container">
+  <div class="items-panel" id="itemsPanel"></div>
+  
+  <div class="map-wrapper">
+    <table class="grid" id="mapGrid"></table>
     
-    <div class="grid-section">
-      <table class="grid-table" id="gridTable"></table>
-      <div class="controls">
-        <button class="btn btn-check" onclick="checkAnswers()">Verificar</button>
-        <button class="btn btn-reset" onclick="resetGame()">Reiniciar</button>
-      </div>
-      <div class="message" id="message"></div>
+    <div class="controls">
+      <button class="btn-check" onclick="verify()">Verificar Respostas</button>
+      <button class="btn-reset" onclick="resetGame()">Reiniciar Mapa</button>
     </div>
+    <div id="msg"></div>
   </div>
 </div>
 
 <script>
-// Dados extraídos fielmente do PDF [cite: 66, 75, 76, 77, 78, 79, 81, 82, 83]
+// Dados oficiais extraídos do PDF
 const SAND = ['1,1','1,2','2,1','2,2','2,3','3,1','3,2','3,3','4,1','4,2'];
 const GRASS = [
   '1,6','1,7','2,7','3,7','4,7','1,8','2,8','3,8','4,8','1,9','2,9','3,9','4,9',
@@ -107,166 +128,155 @@ const GRASS = [
   '6,9','7,9','9,9'
 ];
 
-const OBJECTS = {
-  '2,1':'🌵','3,2':'🌵','3,1':'🌵', // Cactos 
-  '2,6':'🪵','4,4':'🪵','9,3':'🪵', // Troncos [cite: 76]
-  '3,7':'🪨','4,1':'🪨','8,3':'🪨','9,8':'🪨', // Rocha [cite: 77]
-  '1,7':'🌳','2,9':'🌳','3,8':'🌳', // Árvores [cite: 78]
-  '5,2':'🏠','8,9':'🏠','9,6':'🏠', // Casas [cite: 79]
-  '6,7':'🌿','7,4':'🌿', // Arbustos [cite: 81]
-  '5,5':'🐗', // Javali [cite: 82]
-  '5,7':'🦈','9,5':'🦈' // Tubarões [cite: 83]
+const OBSTACLES = {
+  '2,1':'🌵','3,1':'🌵','3,2':'🌵',
+  '2,6':'🪵','4,4':'🪵','9,3':'🪵',
+  '3,7':'🪨','4,1':'🪨','8,3':'🪨','9,8':'🪨',
+  '1,7':'🌳','2,9':'🌳','3,8':'🌳',
+  '5,2':'🏠','8,9':'🏠','9,6':'🏠',
+  '6,7':'🌿','7,4':'🌿',
+  '5,5':'🐗',
+  '5,7':'🦈','9,5':'🦈'
 };
 
-// Itens que NÃO podem ser ocupados [cite: 4, 24]
-const NON_OCCUPIABLE = ['🌵','🪨','🌳','🌿','🐗','🦈'];
+// Somente Troncos (🪵), Casas (🏠) e Água/Areia vazia podem ser ocupados [cite: 3, 4]
+const NON_WALKABLE = ['🌵','🪨','🌳','🌿','🐗','🦈'];
 
-const CLUES = [
-  { id:'A', name:'Rede de Pesca', hint:'Numa casa', icon:'🕸️' },
-  { id:'B', name:'Medicamento', hint:'Num tronco', icon:'💊' },
+const ITEMS = [
+  { id:'A', name:'Rede de Pesca', hint:'Estava numa casa', icon:'🕸️' },
+  { id:'B', name:'Medicamento', hint:'Estava em um tronco', icon:'💊' },
   { id:'C', name:'Sinalizador', hint:'Ilha das árvores', icon:'🔦' },
   { id:'D', name:'Repelente', hint:'Lado do mesmo tipo de obj/animal que alimentos', icon:'🧴' },
-  { id:'E', name:'Água Potável', hint:'Lado de um animal', icon:'💧' },
-  { id:'F', name:'Isqueiro', hint:'Lado de um arbusto', icon:'🔥' },
-  { id:'G', name:'Protetor', hint:'5ª Coluna', icon:'🧴' },
-  { id:'H', name:'Alimentação', hint:'Ilha com 3 outros', icon:'🍱' },
-  { id:'I', name:'Ponto Resgate', hint:'Último disponível', icon:'🚩' }
+  { id:'E', name:'Água Potável', hint:'Ao lado de um animal (Javali)', icon:'💧' },
+  { id:'F', name:'Isqueiro', hint:'Ao lado de um arbusto', icon:'🔥' },
+  { id:'G', name:'Protetor', hint:'Na quinta coluna', icon:'☀️' },
+  { id:'H', name:'Alimentação', hint:'Ilha com três outros', icon:'🍱' },
+  { id:'I', name:'Ponto de Resgate', hint:'O último espaço disponível', icon:'🚩' }
 ];
 
-// Respostas corretas do Gabarito (Página 4) 
-const ANSWERS = {
+const SOLUTIONS = {
   'A':'8,9', 'B':'2,6', 'C':'1,8', 'D':'9,7',
   'E':'5,4', 'F':'7,3', 'G':'4,5', 'H':'6,2', 'I':'3,1'
 };
 
-let selectedClue = null;
-let userPlacements = {};
+let selectedId = null;
+let placements = {};
 
 function init() {
-  renderClues();
-  renderGrid();
+  renderItems();
+  renderMap();
 }
 
-function renderClues() {
-  const panel = document.getElementById('cluesPanel');
-  panel.innerHTML = CLUES.map(c => `
-    <div class="clue-card ${selectedClue === c.id ? 'selected' : ''} ${userPlacements[c.id] ? 'placed' : ''}" 
-         onclick="selectClue('${c.id}')">
-      <strong>${c.id}: ${c.name}</strong><br>
-      <small>${c.hint}</small>
+function renderItems() {
+  const panel = document.getElementById('itemsPanel');
+  panel.innerHTML = ITEMS.map(item => `
+    <div class="item-card ${selectedId === item.id ? 'selected' : ''} ${placements[item.id] ? 'placed' : ''}" 
+         onclick="selectItem('${item.id}')">
+      <strong>${item.id}. ${item.name}</strong><br>
+      <small>${item.icon} ${item.hint}</small>
     </div>
   `).join('');
 }
 
-function selectClue(id) {
-  if (userPlacements[id]) delete userPlacements[id];
-  selectedClue = (selectedClue === id) ? null : id;
-  renderClues();
-  renderGrid();
+function selectItem(id) {
+  selectedId = (selectedId === id) ? null : id;
+  renderItems();
 }
 
-function renderGrid() {
-  const table = document.getElementById('gridTable');
-  table.innerHTML = '';
-  
-  // Bloqueios de linha/coluna 
-  const blockedRows = new Set();
-  const blockedCols = new Set();
-  Object.values(userPlacements).forEach(pos => {
-    const [r, c] = pos.split(',').map(Number);
-    blockedRows.add(r);
-    blockedCols.add(c);
-  });
+function renderMap() {
+  const grid = document.getElementById('mapGrid');
+  grid.innerHTML = '';
+
+  const usedRows = Object.values(placements).map(p => parseInt(p.split(',')[0]));
+  const usedCols = Object.values(placements).map(p => parseInt(p.split(',')[1]));
 
   for (let r = 1; r <= 9; r++) {
     const tr = document.createElement('tr');
     for (let c = 1; c <= 9; c++) {
       const td = document.createElement('td');
-      const key = `${r},${c}`;
-      const obj = OBJECTS[key];
+      const coord = `${r},${c}`;
+      const obj = OBSTACLES[coord];
       
-      // Define terreno
-      if (SAND.includes(key)) td.className = 'grid-cell sand';
-      else if (GRASS.includes(key)) td.className = 'grid-cell grass';
-      else td.className = 'grid-cell sea';
+      // Estilo do Terreno [cite: 66, 67, 69]
+      if (SAND.includes(coord)) td.className = 'cell sand';
+      else if (GRASS.includes(coord)) td.className = 'cell grass';
+      else td.className = 'cell sea';
 
-      // Verifica se está bloqueado por regra de linha/coluna
-      const isBlocked = blockedRows.has(r) || blockedCols.has(c);
-      const occupant = Object.keys(userPlacements).find(k => userPlacements[k] === key);
-
+      // Lógica de Ocupação [cite: 1, 2, 20]
+      const occupant = Object.keys(placements).find(key => placements[key] === coord);
       if (occupant) {
-        td.classList.add('player');
+        td.classList.add('user-choice');
         td.innerText = occupant;
       } else if (obj) {
         td.innerText = obj;
-        if (NON_OCCUPIABLE.includes(obj)) td.classList.add('occupied');
       }
 
-      if (!occupant && isBlocked) td.classList.add('blocked');
+      // Visual de Bloqueio (Linha/Coluna ocupada)
+      if (!occupant && (usedRows.includes(r) || usedCols.includes(c))) {
+        td.classList.add('blocked');
+      }
 
-      td.onclick = () => handleCellClick(r, c, obj);
+      td.onclick = () => placeItem(r, c, obj);
       tr.appendChild(td);
     }
-    table.appendChild(tr);
+    grid.appendChild(tr);
   }
 }
 
-function handleCellClick(r, c, obj) {
-  if (!selectedClue) return;
-  const key = `${r},${c}`;
-  
-  // Valida se terreno permite ocupação [cite: 3, 4]
-  if (obj && NON_OCCUPIABLE.includes(obj)) return;
-  
-  // Regra: uma por linha e coluna [cite: 1]
-  const blockedRows = Object.values(userPlacements).map(p => p.split(',')[0]);
-  const blockedCols = Object.values(userPlacements).map(p => p.split(',')[1]);
-  
-  if (blockedRows.includes(String(r)) || blockedCols.includes(String(c))) {
-    document.getElementById('message').innerText = "Linha ou Coluna já ocupada!";
+function placeItem(r, c, obj) {
+  if (!selectedId) return;
+  const coord = `${r},${c}`;
+
+  // Validação: Não pode ocupar certos objetos [cite: 4]
+  if (obj && NON_WALKABLE.includes(obj)) return;
+
+  // Validação: Regra de Linha e Coluna [cite: 1, 2]
+  const usedRows = Object.values(placements).map(p => parseInt(p.split(',')[0]));
+  const usedCols = Object.values(placements).map(p => parseInt(p.split(',')[1]));
+
+  if (usedRows.includes(r) || usedCols.includes(c)) {
+    document.getElementById('msg').innerText = "❌ Esta linha ou coluna já está ocupada!";
     return;
   }
 
-  userPlacements[selectedClue] = key;
-  selectedClue = null;
-  document.getElementById('message').innerText = "";
-  renderClues();
-  renderGrid();
+  placements[selectedId] = coord;
+  selectedId = null;
+  document.getElementById('msg').innerText = "";
+  renderItems();
+  renderMap();
 }
 
-function checkAnswers() {
-  const keys = Object.keys(ANSWERS);
-  let correctCount = 0;
-  
-  renderGrid(); // Limpa estados anteriores
-  
-  keys.forEach(id => {
-    const userPos = userPlacements[id];
-    const cells = document.querySelectorAll('.grid-cell');
-    
-    if (userPos) {
-      const [r, c] = userPos.split(',').map(Number);
-      const cellIdx = (r - 1) * 9 + (c - 1);
-      const cell = cells[cellIdx];
+function verify() {
+  if (Object.keys(placements).length < 9) {
+    document.getElementById('msg').innerText = "⚠️ Posicione todos os 9 suprimentos primeiro.";
+    return;
+  }
 
-      if (userPos === ANSWERS[id]) {
-        cell.classList.add('correct-placement');
-        correctCount++;
-      } else {
-        cell.classList.add('wrong-placement');
-      }
+  let hits = 0;
+  const cells = document.querySelectorAll('.cell');
+  
+  Object.keys(placements).forEach(id => {
+    const [r, c] = placements[id].split(',').map(Number);
+    const cellIdx = (r - 1) * 9 + (c - 1);
+    const cell = cells[cellIdx];
+    
+    if (placements[id] === SOLUTIONS[id]) {
+      cell.classList.add('correct');
+      hits++;
+    } else {
+      cell.classList.add('wrong');
     }
   });
 
-  const msg = document.getElementById('message');
-  if (correctCount === 9) msg.innerHTML = "🎉 PERFEITO! Você sobreviveu!";
-  else msg.innerHTML = `Você acertou ${correctCount} de 9.`;
+  document.getElementById('msg').innerText = hits === 9 ? 
+    "🎉 Parabéns! Você sobreviveu à ilha!" : 
+    `❌ Você acertou ${hits} de 9 posições. Tente novamente!`;
 }
 
 function resetGame() {
-  userPlacements = {};
-  selectedClue = null;
-  document.getElementById('message').innerText = "";
+  placements = {};
+  selectedId = null;
+  document.getElementById('msg').innerText = "";
   init();
 }
 
