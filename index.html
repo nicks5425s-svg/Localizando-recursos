@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sobrevivência — Desafio de Lógica</title>
+<title>Sobrevivência — Mapa Reajustado</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Crimson+Pro:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -39,7 +39,6 @@
     justify-content: center;
   }
 
-  /* Painel de Itens */
   .items-panel {
     width: 320px;
     display: grid;
@@ -59,7 +58,6 @@
   .item-card.selected { border-color: var(--gold); box-shadow: 0 0 10px var(--gold); }
   .item-card.placed { opacity: 0.4; pointer-events: none; border-color: var(--correct); }
 
-  /* Grid do Mapa */
   .map-wrapper { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 4px; }
   .grid { border-collapse: collapse; }
   .cell {
@@ -99,8 +97,8 @@
 <body>
 
 <header>
-  <h1>🏝️ DESAFIO DE SOBREVIVÊNCIA</h1>
-  <p>Encontre os recursos usando as pistas do PDF. Regra: Um por linha e por coluna[cite: 230].</p>
+  <h1>🏝️ SOBREVIVÊNCIA: MAPA REAJUSTADO</h1>
+  <p>Localize os recursos. Regra: Um por linha e por coluna[cite: 609].</p>
 </header>
 
 <div class="game-container">
@@ -108,18 +106,17 @@
   
   <div class="map-wrapper">
     <table class="grid" id="mapGrid"></table>
-    
     <div class="controls">
-      <button class="btn-check" onclick="verify()">Verificar Respostas</button>
-      <button class="btn-reset" onclick="resetGame()">Reiniciar Mapa</button>
+      <button class="btn-check" onclick="verify()">Verificar Mapa</button>
+      <button class="btn-reset" onclick="resetGame()">Reiniciar</button>
     </div>
     <div id="msg"></div>
   </div>
 </div>
 
 <script>
-// Terrenos definidos na Página 3 do PDF 
-const SAND = ['1,1','1,2','2,1','2,2','2,3','3,1','3,2','3,3','4,1','4,2'];
+// Dados Reajustados (Página 3 do PDF) [cite: 600, 607]
+const SAND = ['1,1','2,1','1,2','2,2','3,2','1,3','2,3','3,3','1,4','2,4'];
 const GRASS = [
   '1,6','1,7','2,7','3,7','4,7','1,8','2,8','3,8','4,8','1,9','2,9','3,9','4,9',
   '4,5','5,2','6,2','7,2','5,3','6,3','7,3','8,3','5,4','6,4','7,4','8,4',
@@ -127,38 +124,35 @@ const GRASS = [
   '6,9','7,9','9,9'
 ];
 
-// Objetos e suas coordenadas exatas (Página 3) [cite: 304, 305, 306, 307, 308, 310, 311, 312]
 const OBSTACLES = {
-  '2,1':'🌵','3,1':'🌵','3,2':'🌵',
-  '2,6':'🪵','4,4':'🪵','9,3':'🪵',
-  '3,7':'🪨','4,1':'🪨','8,3':'🪨','9,8':'🪨',
-  '1,7':'🌳','2,9':'🌳','3,8':'🌳',
-  '5,2':'🏠','8,9':'🏠','9,6':'🏠',
-  '6,7':'🌿','7,4':'🌿',
-  '5,5':'🐗',
-  '5,7':'🦈','9,5':'🦈'
+  '2,1':'🌵','3,1':'🌵','3,2':'🌵', // Cactos reajustados
+  '2,6':'🪵','4,4':'🪵','9,3':'🪵', // Troncos
+  '3,7':'🪨','4,1':'🪨','8,3':'🪨','9,8':'🪨', // Rochas
+  '1,7':'🌳','2,9':'🌳','3,8':'🌳', // Árvores
+  '5,2':'🏠','8,9':'🏠','9,6':'🏠', // Casas
+  '6,7':'🌿','7,4':'🌿', // Arbustos
+  '5,5':'🐗', // Javali
+  '5,7':'🦈','9,5':'🦈' // Tubarões
 };
 
-// De acordo com as regras da Página 1 [cite: 232, 233]
 const NON_WALKABLE = ['🌵','🪨','🌳','🌿','🐗','🦈'];
 
-// Suprimentos e Pistas (Páginas 1 e 2) [cite: 235-244, 261-281]
 const ITEMS = [
   { id:'A', name:'Rede de Pesca', hint:'Estava numa casa', icon:'🕸️' },
   { id:'B', name:'Medicamento', hint:'Estava em um tronco', icon:'💊' },
   { id:'C', name:'Sinalizador', hint:'Ilha das árvores', icon:'🔦' },
-  { id:'D', name:'Repelente', hint:'Lado do mesmo tipo de obj/animal que alimentos', icon:'🧴' },
+  { id:'D', name:'Repelente', hint:'Lado do mesmo tipo que alimentos', icon:'🧴' },
   { id:'E', name:'Água Potável', hint:'Ao lado de um animal (Javali)', icon:'💧' },
   { id:'F', name:'Isqueiro', hint:'Ao lado de um arbusto', icon:'🔥' },
   { id:'G', name:'Protetor', hint:'Na quinta coluna', icon:'☀️' },
   { id:'H', name:'Alimentação', hint:'Ilha com três outros', icon:'🍱' },
-  { id:'I', name:'Ponto de Resgate', hint:'O último espaço disponível', icon:'🚩' }
+  { id:'I', name:'Ponto de Resgate', hint:'Último espaço disponível', icon:'🚩' }
 ];
 
-// Gabarito oficial extraído da Página 4 [cite: 335-343]
+// Gabarito Reajustado (Página 4) [cite: 601, 608]
 const SOLUTIONS = {
-  'A':'8,9', 'B':'2,6', 'C':'1,8', 'D':'9,7',
-  'E':'5,4', 'F':'7,3', 'G':'4,5', 'H':'6,2', 'I':'3,1'
+  'C':'1,8', 'B':'2,6', 'I':'3,1', 'G':'4,5',
+  'E':'5,4', 'H':'6,2', 'F':'7,3', 'A':'8,9', 'D':'9,7'
 };
 
 let selectedId = null;
@@ -188,7 +182,6 @@ function selectItem(id) {
 function renderMap() {
   const grid = document.getElementById('mapGrid');
   grid.innerHTML = '';
-
   const usedRows = Object.values(placements).map(p => parseInt(p.split(',')[0]));
   const usedCols = Object.values(placements).map(p => parseInt(p.split(',')[1]));
 
@@ -199,7 +192,6 @@ function renderMap() {
       const coord = `${r},${c}`;
       const obj = OBSTACLES[coord];
       
-      // Cores do Terreno
       if (SAND.includes(coord)) td.className = 'cell sand';
       else if (GRASS.includes(coord)) td.className = 'cell grass';
       else td.className = 'cell sea';
@@ -212,7 +204,6 @@ function renderMap() {
         td.innerText = obj;
       }
 
-      // Bloqueio visual por regra de linha/coluna [cite: 231]
       if (!occupant && (usedRows.includes(r) || usedCols.includes(c))) {
         td.classList.add('blocked');
       }
@@ -229,7 +220,7 @@ function placeItem(r, c, obj) {
   const coord = `${r},${c}`;
 
   if (obj && NON_WALKABLE.includes(obj)) {
-    document.getElementById('msg').innerText = "❌ Este local não pode ser ocupado!";
+    document.getElementById('msg').innerText = "❌ Local proibido!";
     return;
   }
 
@@ -237,7 +228,7 @@ function placeItem(r, c, obj) {
   const usedCols = Object.values(placements).map(p => parseInt(p.split(',')[1]));
 
   if (usedRows.includes(r) || usedCols.includes(c)) {
-    document.getElementById('msg').innerText = "❌ Regra violada: apenas um por linha e coluna!";
+    document.getElementById('msg').innerText = "❌ Apenas um por linha e coluna!";
     return;
   }
 
@@ -250,13 +241,12 @@ function placeItem(r, c, obj) {
 
 function verify() {
   if (Object.keys(placements).length < 9) {
-    document.getElementById('msg').innerText = "⚠️ Coloque todos os itens antes de verificar.";
+    document.getElementById('msg').innerText = "⚠️ Posicione todos os itens.";
     return;
   }
 
   let hits = 0;
   const cells = document.querySelectorAll('.cell');
-  
   Object.keys(placements).forEach(id => {
     const [r, c] = placements[id].split(',').map(Number);
     const cellIdx = (r - 1) * 9 + (c - 1);
@@ -270,9 +260,7 @@ function verify() {
     }
   });
 
-  document.getElementById('msg').innerText = hits === 9 ? 
-    "🏆 Excelente! Você seguiu as pistas corretamente!" : 
-    `❌ Você acertou ${hits} de 9. Revise suas pistas!`;
+  document.getElementById('msg').innerText = hits === 9 ? "🏆 Perfeito! Sobrevivência garantida!" : `❌ Erros encontrados.`;
 }
 
 function resetGame() {
