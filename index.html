@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sobrevivência — Mapa Reajustado</title>
+<title>Sobrevivência — Jogo de Lógica (Mat 2)</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Crimson+Pro:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -91,14 +91,14 @@
   .btn-check { background: var(--gold); color: #000; }
   .btn-reset { background: #555; color: #fff; }
   
-  #msg { margin-top: 15px; font-weight: bold; font-size: 1.1rem; }
+  #msg { margin-top: 15px; font-weight: bold; font-size: 1.1rem; min-height: 1.5em; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>🏝️ SOBREVIVÊNCIA: MAPA REAJUSTADO</h1>
-  <p>Localize os recursos. Regra: Um por linha e por coluna[cite: 609].</p>
+  <h1>🏝️ SOBREVIVÊNCIA: MAT 2</h1>
+  <p>Localiza os suprimentos. Regra: Um por linha e um por coluna.</p>
 </header>
 
 <div class="game-container">
@@ -115,7 +115,7 @@
 </div>
 
 <script>
-// Dados Reajustados (Página 3 do PDF) [cite: 600, 607]
+// Terrenos Reajustados (PDF Página 3)
 const SAND = ['1,1','2,1','1,2','2,2','3,2','1,3','2,3','3,3','1,4','2,4'];
 const GRASS = [
   '1,6','1,7','2,7','3,7','4,7','1,8','2,8','3,8','4,8','1,9','2,9','3,9','4,9',
@@ -124,15 +124,16 @@ const GRASS = [
   '6,9','7,9','9,9'
 ];
 
+// Obstáculos (Página 3)
 const OBSTACLES = {
-  '2,1':'🌵','3,1':'🌵','3,2':'🌵', // Cactos reajustados
-  '2,6':'🪵','4,4':'🪵','9,3':'🪵', // Troncos
-  '3,7':'🪨','4,1':'🪨','8,3':'🪨','9,8':'🪨', // Rochas
-  '1,7':'🌳','2,9':'🌳','3,8':'🌳', // Árvores
-  '5,2':'🏠','8,9':'🏠','9,6':'🏠', // Casas
-  '6,7':'🌿','7,4':'🌿', // Arbustos
-  '5,5':'🐗', // Javali
-  '5,7':'🦈','9,5':'🦈' // Tubarões
+  '2,1':'🌵','3,1':'🌵','3,2':'🌵',
+  '2,6':'🪵','4,4':'🪵','9,3':'🪵',
+  '3,7':'🪨','4,1':'🪨','8,3':'🪨','9,8':'🪨',
+  '1,7':'🌳','2,9':'🌳','3,8':'🌳',
+  '5,2':'🏠','8,9':'🏠','9,6':'🏠',
+  '6,7':'🌿','7,4':'🌿',
+  '5,5':'🐗',
+  '5,7':'🦈','9,5':'🦈'
 };
 
 const NON_WALKABLE = ['🌵','🪨','🌳','🌿','🐗','🦈'];
@@ -146,10 +147,10 @@ const ITEMS = [
   { id:'F', name:'Isqueiro', hint:'Ao lado de um arbusto', icon:'🔥' },
   { id:'G', name:'Protetor', hint:'Na quinta coluna', icon:'☀️' },
   { id:'H', name:'Alimentação', hint:'Ilha com três outros', icon:'🍱' },
-  { id:'I', name:'Ponto de Resgate', hint:'Último espaço disponível', icon:'🚩' }
+  { id:'I', name:'Ponto de Resgate', hint:'O último espaço disponível', icon:'🚩' }
 ];
 
-// Gabarito Reajustado (Página 4) [cite: 601, 608]
+// Gabarito Oficial (Página 4)
 const SOLUTIONS = {
   'C':'1,8', 'B':'2,6', 'I':'3,1', 'G':'4,5',
   'E':'5,4', 'H':'6,2', 'F':'7,3', 'A':'8,9', 'D':'9,7'
@@ -241,7 +242,7 @@ function placeItem(r, c, obj) {
 
 function verify() {
   if (Object.keys(placements).length < 9) {
-    document.getElementById('msg').innerText = "⚠️ Posicione todos os itens.";
+    document.getElementById('msg').innerText = "⚠️ Posiciona todos os 9 suprimentos.";
     return;
   }
 
@@ -260,7 +261,13 @@ function verify() {
     }
   });
 
-  document.getElementById('msg').innerText = hits === 9 ? "🏆 Perfeito! Sobrevivência garantida!" : `❌ Erros encontrados.`;
+  if (hits === 9) {
+    document.getElementById('msg').style.color = "var(--correct)";
+    document.getElementById('msg').innerText = "🏆 Parabéns! Sobreviveste à ilha!";
+  } else {
+    document.getElementById('msg').style.color = "var(--wrong)";
+    document.getElementById('msg').innerText = `❌ Tens ${9 - hits} erro(s). Tenta novamente!`;
+  }
 }
 
 function resetGame() {
