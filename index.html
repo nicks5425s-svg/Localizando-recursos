@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sobrevivência — Jogo de Lógica</title>
+<title>Sobrevivência — Desafio de Lógica</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Crimson+Pro:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -76,7 +76,6 @@
   .grass { background-color: var(--grass); }
   .sea { background-color: var(--sea); }
 
-  /* Elementos Visuais */
   .cell.blocked::after { content: "×"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: rgba(0,0,0,0.2); font-size: 2rem; }
   .cell.user-choice { background: rgba(240,192,64,0.6) !important; font-weight: bold; color: white; border: 2px solid var(--gold); }
   .cell.correct { background: var(--correct) !important; }
@@ -101,7 +100,7 @@
 
 <header>
   <h1>🏝️ DESAFIO DE SOBREVIVÊNCIA</h1>
-  <p>Localize os suprimentos. Regra: Um por linha e um por coluna.</p>
+  <p>Encontre os recursos usando as pistas do PDF. Regra: Um por linha e por coluna[cite: 230].</p>
 </header>
 
 <div class="game-container">
@@ -119,7 +118,7 @@
 </div>
 
 <script>
-// Dados oficiais extraídos do PDF
+// Terrenos definidos na Página 3 do PDF 
 const SAND = ['1,1','1,2','2,1','2,2','2,3','3,1','3,2','3,3','4,1','4,2'];
 const GRASS = [
   '1,6','1,7','2,7','3,7','4,7','1,8','2,8','3,8','4,8','1,9','2,9','3,9','4,9',
@@ -128,6 +127,7 @@ const GRASS = [
   '6,9','7,9','9,9'
 ];
 
+// Objetos e suas coordenadas exatas (Página 3) [cite: 304, 305, 306, 307, 308, 310, 311, 312]
 const OBSTACLES = {
   '2,1':'🌵','3,1':'🌵','3,2':'🌵',
   '2,6':'🪵','4,4':'🪵','9,3':'🪵',
@@ -139,9 +139,10 @@ const OBSTACLES = {
   '5,7':'🦈','9,5':'🦈'
 };
 
-// Somente Troncos (🪵), Casas (🏠) e Água/Areia vazia podem ser ocupados [cite: 3, 4]
+// De acordo com as regras da Página 1 [cite: 232, 233]
 const NON_WALKABLE = ['🌵','🪨','🌳','🌿','🐗','🦈'];
 
+// Suprimentos e Pistas (Páginas 1 e 2) [cite: 235-244, 261-281]
 const ITEMS = [
   { id:'A', name:'Rede de Pesca', hint:'Estava numa casa', icon:'🕸️' },
   { id:'B', name:'Medicamento', hint:'Estava em um tronco', icon:'💊' },
@@ -154,6 +155,7 @@ const ITEMS = [
   { id:'I', name:'Ponto de Resgate', hint:'O último espaço disponível', icon:'🚩' }
 ];
 
+// Gabarito oficial extraído da Página 4 [cite: 335-343]
 const SOLUTIONS = {
   'A':'8,9', 'B':'2,6', 'C':'1,8', 'D':'9,7',
   'E':'5,4', 'F':'7,3', 'G':'4,5', 'H':'6,2', 'I':'3,1'
@@ -197,12 +199,11 @@ function renderMap() {
       const coord = `${r},${c}`;
       const obj = OBSTACLES[coord];
       
-      // Estilo do Terreno [cite: 66, 67, 69]
+      // Cores do Terreno
       if (SAND.includes(coord)) td.className = 'cell sand';
       else if (GRASS.includes(coord)) td.className = 'cell grass';
       else td.className = 'cell sea';
 
-      // Lógica de Ocupação [cite: 1, 2, 20]
       const occupant = Object.keys(placements).find(key => placements[key] === coord);
       if (occupant) {
         td.classList.add('user-choice');
@@ -211,7 +212,7 @@ function renderMap() {
         td.innerText = obj;
       }
 
-      // Visual de Bloqueio (Linha/Coluna ocupada)
+      // Bloqueio visual por regra de linha/coluna [cite: 231]
       if (!occupant && (usedRows.includes(r) || usedCols.includes(c))) {
         td.classList.add('blocked');
       }
@@ -227,15 +228,16 @@ function placeItem(r, c, obj) {
   if (!selectedId) return;
   const coord = `${r},${c}`;
 
-  // Validação: Não pode ocupar certos objetos [cite: 4]
-  if (obj && NON_WALKABLE.includes(obj)) return;
+  if (obj && NON_WALKABLE.includes(obj)) {
+    document.getElementById('msg').innerText = "❌ Este local não pode ser ocupado!";
+    return;
+  }
 
-  // Validação: Regra de Linha e Coluna [cite: 1, 2]
   const usedRows = Object.values(placements).map(p => parseInt(p.split(',')[0]));
   const usedCols = Object.values(placements).map(p => parseInt(p.split(',')[1]));
 
   if (usedRows.includes(r) || usedCols.includes(c)) {
-    document.getElementById('msg').innerText = "❌ Esta linha ou coluna já está ocupada!";
+    document.getElementById('msg').innerText = "❌ Regra violada: apenas um por linha e coluna!";
     return;
   }
 
@@ -248,7 +250,7 @@ function placeItem(r, c, obj) {
 
 function verify() {
   if (Object.keys(placements).length < 9) {
-    document.getElementById('msg').innerText = "⚠️ Posicione todos os 9 suprimentos primeiro.";
+    document.getElementById('msg').innerText = "⚠️ Coloque todos os itens antes de verificar.";
     return;
   }
 
@@ -269,8 +271,8 @@ function verify() {
   });
 
   document.getElementById('msg').innerText = hits === 9 ? 
-    "🎉 Parabéns! Você sobreviveu à ilha!" : 
-    `❌ Você acertou ${hits} de 9 posições. Tente novamente!`;
+    "🏆 Excelente! Você seguiu as pistas corretamente!" : 
+    `❌ Você acertou ${hits} de 9. Revise suas pistas!`;
 }
 
 function resetGame() {
